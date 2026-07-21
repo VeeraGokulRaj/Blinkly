@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blinkly</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Inter, Arial, sans-serif;
+            background: #f4f6fb;
+            color: #222;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 80px auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0,0,0,.08);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 35px;
+        }
+
+        form {
+            display: flex;
+            gap: 12px;
+        }
+
+        input[type="url"] {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid #d6d6d6;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input[type="url"]:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            padding: 14px 22px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            margin-top: 35px;
+            padding: 20px;
+            background: #eef5ff;
+            border-radius: 10px;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+        }
+
+        .row {
+            margin-bottom: 12px;
+        }
+
+        .label {
+            font-weight: 600;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+            word-break: break-word;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #888;
+            font-size: .9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Blinkly⚡</h1>
+    <p class="subtitle">
+        Create short, memorable URLs instantly.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.original_url }}
+        <button type="submit">
+            Shorten
+        </button>
+    </form>
+
+    {% if short_url %}
+    <div class="result">
+
+        <h3>Your shortened URL</h3>
+
+        <div class="row">
+            <span class="label">Original</span><br>
+            <a href="{{ short_url.original_url }}" target="_blank">
+                {{ short_url.original_url }}
+            </a>
+        </div>
+
+        <div class="row">
+            <span class="label">Short</span><br>
+            <a
+                href="http://{{ request.get_host }}/{{ short_url.short_code }}"
+                target="_blank"
+            >
+                http://{{ request.get_host }}/{{ short_url.short_code }}
+            </a>
+        </div>
+
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Built with Django ❤️
+    </div>
+
+</div>
+
+</body>
+</html>
