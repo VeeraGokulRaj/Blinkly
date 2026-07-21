@@ -19,8 +19,17 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
+from app.views.redirect import redirect_view
+from app.views.short_url import create_short_url_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", create_short_url_view, name="create-short-url"),
+    path(
+        "<str:short_code>/",
+        redirect_view,
+        name="redirect",
+    ),
 ]
 
 if settings.DEBUG:
