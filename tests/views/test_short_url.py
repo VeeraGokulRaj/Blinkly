@@ -62,3 +62,18 @@ class TestCreateShortUrlView:
         request = RequestFactory().get("/")
         response = create_short_url_view(request)
         assert b"Your shortened URL" not in response.content
+
+    def test_post_url_at_max_length_creates_short_url(self):
+        prefix = "https://example.com/"
+        remaining = 2048 - len(prefix)
+        url = prefix + ("a" * remaining)
+
+        request = RequestFactory().post(
+            "/",
+            {"original_url": url},
+        )
+
+        response = create_short_url_view(request)
+
+        assert response.status_code == 200
+        assert ShortURL.objects.filter(original_url=url).exists()

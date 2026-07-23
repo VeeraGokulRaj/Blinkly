@@ -6,6 +6,7 @@ from app.models.base import BaseModel
 
 class ShortURL(BaseModel):
     original_url = models.URLField(
+        max_length=2048,
         verbose_name=_("Original URL"),
         help_text=_("The destination URL."),
     )
