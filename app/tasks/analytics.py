@@ -1,22 +1,30 @@
+from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
-from app.models import ClickEvent
-
 from user_agents import parse
-
-from app.models import DeviceType
-from django.db import transaction
+from celery import shared_task
 
 
-def track_click(request, short_url, country: str = "") -> None:
+from app.models import ClickEvent, ShortURL, DeviceType
+
+
+@shared_task
+def track_click_task(
+    *,
+    short_url_id: int,
+    user_agent: str,
+    referer: str,
+    country: str = "",
+) -> None:
     """
-    Record a click event and update the aggregate statistics.
+    Record a click event and update aggregate statistics.
     """
+
+    browser, operating_system, device_type = get_device_information(user_agent)
+
     with transaction.atomic():
-        user_agent = request.headers.get("User-Agent", "")
-
-        browser, operating_system, device_type = get_device_information(user_agent)
+        short_url = ShortURL.objects.get(pk=short_url_id)
 
         ClickEvent.objects.create(
             short_url=short_url,
@@ -24,13 +32,11 @@ def track_click(request, short_url, country: str = "") -> None:
             operating_system=operating_system,
             device_type=device_type,
             country=country,
-            referer=request.headers.get("Referer", ""),
+            referer=referer,
             user_agent=user_agent,
         )
 
-        type(short_url).objects.filter(
-            pk=short_url.pk,
-        ).update(
+        ShortURL.objects.filter(pk=short_url_id).update(
             click_count=F("click_count") + 1,
             last_clicked_at=timezone.now(),
         )

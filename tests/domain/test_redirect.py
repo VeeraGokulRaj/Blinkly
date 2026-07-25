@@ -23,15 +23,19 @@ class TestRedirectShortUrl(ShortURLMixin):
         with pytest.raises(Http404):
             redirect_short_url(request, "nonexistent")
 
-    @patch("app.domain.redirect.track_click")
-    def test_calls_track_click(self, mock_track):
-        su = self.create_short_url(short_code="xyz789")
-        request = RequestFactory().get("/")
+    @patch("app.domain.redirect.track_click_task")
+    def test_calls_track_click_task(self, mock_task):
+        self.create_short_url(short_code="xyz789")
+        request = RequestFactory().get(
+            "/",
+            HTTP_USER_AGENT="Mozilla/5.0 TestAgent",
+            HTTP_REFERER="https://google.com",
+        )
         redirect_short_url(request, "xyz789")
-        mock_track.assert_called_once_with(request, su)
+        mock_task.delay.assert_called_once()
 
-    @patch("app.domain.redirect.track_click")
-    def test_returns_correct_url_for_different_short_code(self, mock_track):
+    @patch("app.domain.redirect.track_click_task")
+    def test_returns_correct_url_for_different_short_code(self, mock_task):
         self.create_short_url(
             original_url="https://first.com",
             short_code="aaa",
