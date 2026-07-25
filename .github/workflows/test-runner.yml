@@ -3,7 +3,9 @@ name: 🧪 Test Suite
 on:
   push:
     branches: ["main", "master"]
+
   pull_request:
+
   workflow_dispatch:
 
 concurrency:
@@ -14,6 +16,40 @@ jobs:
   tests:
     name: 🐍 Python 3.12 • Pytest
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: blinkly
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d blinkly"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      SECRET_KEY: test-secret-key
+      DB_NAME: blinkly
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: 5432
+      REDIS_URL: redis://localhost:6379/1
 
     steps:
       - name: 📥 Checkout Repository
@@ -31,4 +67,4 @@ jobs:
         run: uv sync --dev
 
       - name: 🧪 Run Test Suite
-        run: uv run pytest tests/ -n auto
+        run: uv run pytest tests/ -n auto --disable-warnings
