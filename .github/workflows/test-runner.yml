@@ -1,0 +1,45 @@
+name: 🧪 Test Suite
+
+on:
+  push:
+    branches: ["main", "master"]
+
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: 🐍 Python 3.12 • Pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: 📦 Install Dependencies
+        run: uv sync --dev
+
+      - name: 🧪 Run Test Suite
+        run: uv run pytest tests/ -n auto
+
+      - name: ✅ Tests Passed
+        if: success()
+        run: echo "🎉 All tests passed successfully!"
+
+      - name: ❌ Tests Failed
+        if: failure()
+        run: |
+          echo "Some tests failed."
+          exit 1
