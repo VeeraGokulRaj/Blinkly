@@ -1,3 +1,2 @@
-from .ping import ping  # noqa: F401
-
-__all__ = ("ping",)
+from .ping import *  # noqa: F403
+from .analytics import *  # noqa: F403
