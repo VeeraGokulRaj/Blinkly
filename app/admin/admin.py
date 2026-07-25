@@ -1,6 +1,125 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
-from app.models import ClickEvent, ShortURL
+from app.models import (
+    BackgroundTask,
+    BackgroundTaskEvent,
+    ClickEvent,
+    ShortURL,
+    TaskStatus,
+)
+
+
+class BackgroundTaskEventInline(admin.TabularInline):
+    model = BackgroundTaskEvent
+    extra = 0
+    readonly_fields = ("event", "message", "created")
+    can_delete = False
+    ordering = ("-created",)
+
+
+@admin.register(BackgroundTask)
+class BackgroundTaskAdmin(admin.ModelAdmin):
+    list_display = (
+        "task_id",
+        "name",
+        "status_badge",
+        "queue",
+        "started_at",
+        "finished_at",
+        "created",
+    )
+    list_filter = (
+        "status",
+        "name",
+        "queue",
+        "created",
+    )
+    search_fields = (
+        "task_id",
+        "name",
+        "exception",
+    )
+    readonly_fields = (
+        "task_id",
+        "name",
+        "args",
+        "kwargs",
+        "queue",
+        "created_by",
+        "status",
+        "started_at",
+        "finished_at",
+        "exception",
+        "created",
+        "modified",
+    )
+    inlines = [BackgroundTaskEventInline]
+    ordering = ("-created",)
+    list_per_page = 25
+
+    fieldsets = (
+        (
+            "Task Overview",
+            {
+                "fields": (
+                    "task_id",
+                    "name",
+                    "status",
+                    "queue",
+                    "created_by",
+                )
+            },
+        ),
+        (
+            "Execution Details",
+            {
+                "fields": (
+                    "started_at",
+                    "finished_at",
+                    "args",
+                    "kwargs",
+                    "exception",
+                )
+            },
+        ),
+        (
+            "System Timestamps",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "created",
+                    "modified",
+                ),
+            },
+        ),
+    )
+
+    @admin.display(description="Status")
+    def status_badge(self, obj):
+        color_map = {
+            TaskStatus.PENDING: "#6c757d",
+            TaskStatus.RECEIVED: "#17a2b8",
+            TaskStatus.STARTED: "#007bff",
+            TaskStatus.SUCCESS: "#28a745",
+            TaskStatus.FAILURE: "#dc3545",
+            TaskStatus.RETRY: "#ffc107",
+            TaskStatus.REVOKED: "#343a40",
+        }
+        color = color_map.get(obj.status, "#6c757d")
+        return format_html(
+            '<span style="background:{}; color:white; padding:3px 10px; border-radius:12px; font-weight:bold; font-size:0.85em;">{}</span>',
+            color,
+            obj.get_status_display(),
+        )
+
+
+@admin.register(BackgroundTaskEvent)
+class BackgroundTaskEventAdmin(admin.ModelAdmin):
+    list_display = ("task", "event", "message", "created")
+    list_filter = ("event", "created")
+    search_fields = ("task__task_id", "task__name", "message")
+    readonly_fields = ("task", "event", "message", "created", "modified")
 
 
 @admin.register(ShortURL)
