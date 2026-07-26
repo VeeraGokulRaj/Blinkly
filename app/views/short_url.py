@@ -3,6 +3,7 @@ from django.shortcuts import render
 from app.domain.short_url import create_short_url
 from app.forms import ShortURLForm
 from django.core.exceptions import ValidationError
+from config.settings.base import SITE_URL
 
 
 def create_short_url_view(request):
@@ -27,8 +28,5 @@ def create_short_url_view(request):
     return render(
         request,
         "base.html",
-        {
-            "form": form,
-            "short_url": short_url,
-        },
+        {"form": form, "short_url": short_url, "site_url": SITE_URL},
     )
