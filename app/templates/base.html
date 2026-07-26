@@ -107,6 +107,16 @@
             color: #888;
             font-size: .9rem;
         }
+
+        .error {
+            margin-top: 8px;
+            color: #dc2626;
+            font-size: 14px;
+        }
+
+        .error p {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -121,6 +131,14 @@
     <form method="post">
         {% csrf_token %}
         {{ form.original_url }}
+
+        {% if form.original_url.errors %}
+            <div class="error">
+                {% for error in form.original_url.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
         <button type="submit">
             Shorten
         </button>

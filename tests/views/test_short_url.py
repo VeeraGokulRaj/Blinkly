@@ -77,3 +77,39 @@ class TestCreateShortUrlView:
 
         assert response.status_code == 200
         assert ShortURL.objects.filter(original_url=url).exists()
+
+    def test_post_blinkly_url_with_query_shows_validation_error(self):
+        existing = ShortURL.objects.create(
+            original_url="https://example.com/v",
+            target_domain="example.com",
+            short_code="vq",
+        )
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}?ref=home"
+        request = RequestFactory().post("/", {"original_url": nested_url})
+        response = create_short_url_view(request)
+        assert response.status_code == 200
+        assert b"query parameters or fragments" in response.content
+
+    def test_post_blinkly_url_with_fragment_shows_validation_error(self):
+        existing = ShortURL.objects.create(
+            original_url="https://example.com/f",
+            target_domain="example.com",
+            short_code="vf",
+        )
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}#section"
+        request = RequestFactory().post("/", {"original_url": nested_url})
+        response = create_short_url_view(request)
+        assert response.status_code == 200
+        assert b"query parameters or fragments" in response.content
+
+    def test_post_blinkly_url_clean_resolves_normally(self):
+        existing = ShortURL.objects.create(
+            original_url="https://example.com/clean",
+            target_domain="example.com",
+            short_code="vc",
+        )
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}"
+        request = RequestFactory().post("/", {"original_url": nested_url})
+        response = create_short_url_view(request)
+        assert response.status_code == 200
+        assert b"Your shortened URL" in response.content

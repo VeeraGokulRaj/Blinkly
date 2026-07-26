@@ -2,6 +2,7 @@ from django.shortcuts import render
 
 from app.domain.short_url import create_short_url
 from app.forms import ShortURLForm
+from django.core.exceptions import ValidationError
 
 
 def create_short_url_view(request):
@@ -11,7 +12,15 @@ def create_short_url_view(request):
         form = ShortURLForm(request.POST)
 
         if form.is_valid():
-            short_url = create_short_url(form.cleaned_data["original_url"])
+            try:
+                short_url = create_short_url(
+                    form.cleaned_data["original_url"],
+                )
+            except ValidationError as exc:
+                form.add_error(
+                    "original_url",
+                    exc.message,
+                )
     else:
         form = ShortURLForm()
 
