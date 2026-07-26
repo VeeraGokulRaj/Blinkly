@@ -120,6 +120,76 @@ class TestExtractDomain:
 
 
 @pytest.mark.django_db
+class TestCreateShortUrlNestedUrl:
+    def test_nested_url_returns_existing_short_url(self):
+        existing = create_short_url("https://example.com/real-target")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}"
+        result = create_short_url(nested_url)
+        assert result.pk == existing.pk
+        assert result.original_url == "https://example.com/real-target"
+
+    def test_nested_url_does_not_create_self_referencing_url(self):
+        existing = create_short_url("https://example.com/target")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}"
+        result = create_short_url(nested_url)
+        assert result.original_url != nested_url
+
+    def test_nested_url_with_nonexistent_short_code_creates_new(self):
+        nested_url = "http://127.0.0.1:8001/nocode"
+        result = create_short_url(nested_url)
+        assert result.pk is not None
+        assert result.original_url == nested_url
+
+    def test_nested_url_with_path_segments_does_not_resolve(self):
+        existing = create_short_url("https://example.com/seg-target")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}/extra/path"
+        result = create_short_url(nested_url)
+        assert result.pk != existing.pk
+        assert result.original_url == nested_url
+
+    def test_non_nested_url_with_same_path_not_treated_as_nested(self):
+        existing = create_short_url("https://example.com/abc")
+        normal_url = f"https://other-site.com/{existing.short_code}"
+        result = create_short_url(normal_url)
+        assert result.pk != existing.pk
+        assert result.original_url == normal_url
+
+    def test_nested_url_with_query_params_not_resolved(self):
+        existing = create_short_url("https://example.com/qp-target")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}?ref=home"
+        result = create_short_url(nested_url)
+        assert result.pk != existing.pk
+        assert result.original_url == nested_url
+
+    def test_nested_url_with_fragment_not_resolved(self):
+        existing = create_short_url("https://example.com/frag-target")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}#section"
+        result = create_short_url(nested_url)
+        assert result.pk != existing.pk
+        assert result.original_url == nested_url
+
+    def test_nested_url_with_query_and_fragment_not_resolved(self):
+        existing = create_short_url("https://example.com/both-target")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}?ref=home#section"
+        result = create_short_url(nested_url)
+        assert result.pk != existing.pk
+        assert result.original_url == nested_url
+
+    def test_nested_url_with_empty_query_resolves(self):
+        existing = create_short_url("https://example.com/empty-qp")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}?"
+        result = create_short_url(nested_url)
+        assert result.pk == existing.pk
+
+    def test_nested_url_exact_match_resolves(self):
+        existing = create_short_url("https://example.com/exact")
+        nested_url = f"http://127.0.0.1:8001/{existing.short_code}"
+        result = create_short_url(nested_url)
+        assert result.pk == existing.pk
+        assert result.original_url == "https://example.com/exact"
+
+
+@pytest.mark.django_db
 class TestCreateShortUrl:
     def test_creates_new_short_url(self):
         url = "https://example.com/new"

@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 from django.db import transaction
 
 from app.models import ShortURL
+from config.settings.base import SITE_URL
 
 BASE62_ALPHABET = "k3G8am0LzQvBxW5C2rNh7AfyYtZsE1pdjc9eXUMi4VJqo6uKHIblFOgRwPnTS"
 BASE = len(BASE62_ALPHABET)
@@ -15,7 +16,23 @@ def create_short_url(original_url: str) -> ShortURL:
     Create a shortened URL or return the existing one.
     """
 
+    parsed = urlparse(original_url)
+    site = urlparse(SITE_URL)
+
     with transaction.atomic():
+        # Reuse an existing Blinkly short URL only if the URL has
+        # no query parameters or fragment.
+        if parsed.netloc == site.netloc and not parsed.query and not parsed.fragment:
+            existing = ShortURL.objects.filter(
+                short_code=parsed.path.strip("/"),
+            ).first()
+
+            if existing:
+                print(f"Matched short code - {parsed.path.strip('/')}")
+                return existing
+
+        # For all other URLs (including Blinkly URLs with query params),
+        # check whether the exact URL has already been shortened.
         existing = ShortURL.objects.filter(
             original_url=original_url,
         ).first()
