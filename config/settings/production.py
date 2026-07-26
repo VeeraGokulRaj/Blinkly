@@ -12,18 +12,12 @@ When deploying to free cloud platforms (e.g., Render, Railway, Upstash Redis, or
 """
 
 from .base import *  # noqa: F403
+from .base import SITE_URL, env
 
-DEBUG = False
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])  # noqa: F405
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
-# Production Celery Redis Broker & Backend Configuration
-# Falls back to REDIS_URL or CELERY_BROKER_URL, with dummy fallback placeholder
-CELERY_BROKER_URL = env(  # noqa: F405
-    "CELERY_BROKER_URL",
-    default=env("REDIS_URL", default="redis://dummy-production-redis-host:6379/0"),  # noqa: F405
-)
-CELERY_RESULT_BACKEND = env(  # noqa: F405
-    "CELERY_RESULT_BACKEND",
-    default=env("REDIS_URL", default="redis://dummy-production-redis-host:6379/0"),  # noqa: F405
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[SITE_URL],
 )

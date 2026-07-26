@@ -1,11 +1,14 @@
 from .base import *  # noqa: F403
+from .base import SITE_URL, env
 
-DEBUG = True
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-]
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
+
+
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[SITE_URL],
+)
 
 INTERNAL_IPS = [
     "127.0.0.1",
@@ -21,7 +24,3 @@ MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
 ] + MIDDLEWARE  # noqa: F405
-
-# Local Celery Configuration (Redis Broker)
-CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://127.0.0.1:6379/1")  # noqa: F405
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://127.0.0.1:6379/1")  # noqa: F405
