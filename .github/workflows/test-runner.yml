@@ -44,6 +44,9 @@ jobs:
 
     env:
       SECRET_KEY: test-secret-key
+      SITE_URL: http://127.0.0.1:8001
+      ALLOWED_HOSTS: 127.0.0.1,localhost
+      CSRF_TRUSTED_ORIGINS: http://127.0.0.1:8001,http://localhost:8001
       DB_NAME: blinkly
       DB_USER: postgres
       DB_PASSWORD: postgres

@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+from django.core.exceptions import ValidationError
 
 from django.db import transaction
 
@@ -15,27 +16,8 @@ def create_short_url(original_url: str) -> ShortURL:
     """
     Create a shortened URL or return the existing one.
     """
-
-    parsed = urlparse(original_url)
-    site = urlparse(SITE_URL)
-
     with transaction.atomic():
-        # Reuse an existing Blinkly short URL only if the URL has
-        # no query parameters or fragment.
-        if parsed.netloc == site.netloc and not parsed.query and not parsed.fragment:
-            existing = ShortURL.objects.filter(
-                short_code=parsed.path.strip("/"),
-            ).first()
-
-            if existing:
-                print(f"Matched short code - {parsed.path.strip('/')}")
-                return existing
-
-        # For all other URLs (including Blinkly URLs with query params),
-        # check whether the exact URL has already been shortened.
-        existing = ShortURL.objects.filter(
-            original_url=original_url,
-        ).first()
+        existing = get_existing_short_url(original_url)
 
         if existing:
             return existing
@@ -46,10 +28,32 @@ def create_short_url(original_url: str) -> ShortURL:
         )
 
         short_url.short_code = generate_short_code(short_url.pk)
-
         short_url.save(update_fields=["short_code"])
 
         return short_url
+
+
+def get_existing_short_url(original_url: str) -> ShortURL | None:
+    """
+    Return an existing short URL for the given URL, if one exists.
+    """
+
+    parsed = urlparse(original_url)
+    site = urlparse(SITE_URL)
+
+    if parsed.netloc == site.netloc:
+        if parsed.query or parsed.fragment:
+            raise ValidationError(
+                "Blinkly URLs with query parameters or fragments cannot be shortened."
+            )
+
+        return ShortURL.objects.filter(
+            short_code=parsed.path.strip("/"),
+        ).first()
+
+    return ShortURL.objects.filter(
+        original_url=original_url,
+    ).first()
 
 
 def extract_domain(url: str) -> str:
