@@ -13,6 +13,9 @@ When deploying to free cloud platforms (e.g., Render, Railway, Upstash Redis, or
 
 from .base import *  # noqa: F403
 from .base import SITE_URL, env
+import sentry_sdk
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.django import DjangoIntegration
 
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
@@ -20,4 +23,14 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
     default=[SITE_URL],
+)
+
+sentry_sdk.init(
+    dsn="https://ad139a357ea01b8b53f573f8b5695d3d@o4511799891197953.ingest.us.sentry.io/4511799899389952",
+    integrations=[
+        DjangoIntegration(),
+        CeleryIntegration(),
+    ],
+    traces_sample_rate=1,
+    send_default_pii=True,
 )
