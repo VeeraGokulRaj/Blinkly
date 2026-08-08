@@ -14,6 +14,7 @@ dependencies = [
     "django-safedelete>=1.4.1",
     "django-simple-history>=3.12.0",
     "faker>=40.31.0",
+    "gunicorn>=26.0.0",
     "psycopg[binary]>=3.3.4",
     "sentry-sdk>=2.66.1",
     "user-agents>=2.2.0",

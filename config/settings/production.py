@@ -20,6 +20,16 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
+# Ensure session/csrf cookies are sent only over HTTPS.
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# It is always served behind HTTPS via reverse proxy.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True
+X_FRAME_OPTIONS = "DENY"
+USE_X_FORWARDED_HOST = True
+
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS",
     default=[SITE_URL],
